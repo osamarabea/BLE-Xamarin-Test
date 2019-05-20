@@ -11,6 +11,7 @@ using Plugin.Permissions;
 using MvvmCross.Forms.Droid.Presenters;
 using BLE.Client.Repositories;
 using Autofac;
+using Plugin.Messaging;
 
 namespace BLE.Client.Droid
 {
@@ -44,6 +45,7 @@ namespace BLE.Client.Droid
             Mvx.RegisterSingleton(() => UserDialogs.Instance);
             Mvx.RegisterSingleton(() => CrossSettings.Current);
             Mvx.RegisterSingleton(() => CrossPermissions.Current);
+            Mvx.RegisterSingleton(() => CrossMessaging.Current);
         }
     }
 }

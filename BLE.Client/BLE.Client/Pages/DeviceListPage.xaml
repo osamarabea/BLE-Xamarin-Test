@@ -78,12 +78,13 @@
                 
         <StackLayout Grid.Row="4" Orientation="Horizontal">
           <!--<Button Text="Connect to previous" Command="{Binding ConnectToPreviousCommand}" HorizontalOptions="FillAndExpand"/>-->
-          <Button Text="Stop Scan" Command="{Binding StopScanCommand}" HorizontalOptions="End"/>
+          <Button Text="Stop Scan" Command="{Binding StopScanCommand}" HorizontalOptions="Start"/>
+          <Button Text="Export DB" Command="{Binding SendEmailCommand}" HorizontalOptions="End"/>  
           <ActivityIndicator IsRunning="{Binding IsRefreshing}"
                              HeightRequest="24"
                              WidthRequest="24"
                              VerticalOptions="Center"
-                             HorizontalOptions="End"/>
+                             HorizontalOptions="Center"/>
         </StackLayout>
 
       </Grid>

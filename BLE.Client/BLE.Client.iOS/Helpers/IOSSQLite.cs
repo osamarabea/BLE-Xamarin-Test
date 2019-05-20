@@ -8,14 +8,16 @@ namespace BLE.Client.iOS.Helpers
 {
     public class IOSSQLite : ISQLite
     {
+        public string DbPath { get; set; }
+
         public SQLiteConnection GetConnection()
         {
             string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.Personal); // Documents folder  
             string libraryPath = Path.Combine(documentsPath, "..", "Library"); // Library folder  
-            var path = Path.Combine(libraryPath, DatabaseHelper.DbFileName);
+            DbPath = Path.Combine(libraryPath, DatabaseHelper.DbFileName);
             // Create the connection  
             var plat = new SQLite.Net.Platform.XamarinIOS.SQLitePlatformIOS();
-            var conn = new SQLiteConnection(plat, path);
+            var conn = new SQLiteConnection(plat, DbPath);
             // Return the database connection  
             return conn;
         }

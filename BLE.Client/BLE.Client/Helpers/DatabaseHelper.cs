@@ -15,9 +15,10 @@ namespace BLE.Client.Helpers
 
         public DatabaseHelper()
         {
+            sqliteconnection = DependencyService.Get<ISQLite>().GetConnection();
             //sqliteconnection = Mvx.Resolve<ISQLite>().GetConnection();
-            //sqliteconnection = DependencyService.Get<ISQLite>().GetConnection();
-            //sqliteconnection.CreateTable<AdvertisementData>();
+            sqliteconnection = DependencyService.Get<ISQLite>().GetConnection();
+            sqliteconnection.CreateTable<AdvertisementData>();
         }
 
         // Get All Device data      

@@ -9,13 +9,15 @@ namespace BLE.Client.Droid.Helpers
 {
     public class AndroidSQLite : ISQLite
     {
+        public string DbPath { get; set; }
+
         public SQLiteConnection GetConnection()
         {
             string documentsPath = System.Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
 
             // Documents folder  
-            var path = Path.Combine(documentsPath, DatabaseHelper.DbFileName);
-            var conn = new SQLiteConnection(path);
+            DbPath = Path.Combine(documentsPath, DatabaseHelper.DbFileName);
+            var conn = new SQLiteConnection(DbPath);
 
             // Return the database connection  
             return conn;

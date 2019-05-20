@@ -6,14 +6,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using Acr.UserDialogs;
 using BLE.Client.Extensions;
+using BLE.Client.Helpers;
 using BLE.Client.Models;
 using BLE.Client.Repositories;
 using MvvmCross.Core.ViewModels;
 using MvvmCross.Platform;
+using Newtonsoft.Json;
 using Plugin.BLE.Abstractions;
 using Plugin.BLE.Abstractions.Contracts;
 using Plugin.BLE.Abstractions.EventArgs;
 using Plugin.BLE.Abstractions.Extensions;
+using Plugin.Messaging;
 using Plugin.Permissions.Abstractions;
 using Plugin.Settings.Abstractions;
 using Xamarin.Forms;
@@ -27,6 +30,7 @@ namespace BLE.Client.ViewModels
         private readonly ISettings _settings;
         private readonly IPermissions _permissions;
         private readonly IAdvertisementDataRepository _advertisementDataRepository;
+        private readonly ISQLite _sqliteProvider;
         private Guid _previousGuid;
         private CancellationTokenSource _cancellationTokenSource;
 
@@ -43,6 +47,7 @@ namespace BLE.Client.ViewModels
         }
 
         public MvxCommand RefreshCommand => new MvxCommand(() => TryStartScanning(true));
+        public MvxCommand SendEmailCommand => new MvxCommand(() => SendDbEmail());
         public MvxCommand<DeviceListItemViewModel> DisconnectCommand => new MvxCommand<DeviceListItemViewModel>(DisconnectDevice);
 
         public MvxCommand<DeviceListItemViewModel> ConnectDisposeCommand => new MvxCommand<DeviceListItemViewModel>(ConnectAndDisposeDevice);
@@ -127,6 +132,7 @@ namespace BLE.Client.ViewModels
             Adapter.DeviceConnectionLost += OnDeviceConnectionLost;
             //Adapter.DeviceConnected += (sender, e) => Adapter.DisconnectDeviceAsync(e.Device);
             _advertisementDataRepository = DependencyService.Get<IAdvertisementDataRepository>();
+            _sqliteProvider = DependencyService.Get<ISQLite>();
         }
 
         private Task GetPreviousGuidAsync()
@@ -388,7 +394,8 @@ namespace BLE.Client.ViewModels
 
                     var advModel = new AdvertisementData()
                     {
-                        Id = device.Id,
+                        Id = Guid.NewGuid(),
+                        DeviceId = device.Id.ToString(),
                         Name = device.Name,
                         Data = device.Device.AdvertisementRecords[0].Data
                     };
@@ -545,6 +552,22 @@ namespace BLE.Client.ViewModels
             Devices.FirstOrDefault(d => d.Id == e.Device.Id)?.Update();
             _userDialogs.HideLoading();
             _userDialogs.Toast($"Disconnected {e.Device.Name}");
+        }
+
+        private void SendDbEmail ()
+        {
+            var savedData = _advertisementDataRepository.GetAllDevicesData();
+            var emailMessenger = CrossMessaging.Current.EmailMessenger;
+            if (emailMessenger.CanSendEmail)
+            {
+                var email = new EmailMessageBuilder()
+                  .Subject("BLE Test Data")
+                  .Body(JsonConvert.SerializeObject(savedData))
+                  //.WithAttachment(_sqliteProvider.DbPath, "*/*")
+                  .Build();
+
+                emailMessenger.SendEmail(email);
+            }
         }
 
         public MvxCommand<DeviceListItemViewModel> CopyGuidCommand => new MvxCommand<DeviceListItemViewModel>(device =>
