@@ -3,7 +3,6 @@ using System.IO;
 using BLE.Client.Helpers;
 using BLE.Client.iOS.Helpers;
 
-//[assembly: Dependency(typeof(IOSSQLite))]
 namespace BLE.Client.iOS.Helpers
 {
     public class IOSSQLite : ISQLite

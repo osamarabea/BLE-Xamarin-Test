@@ -14,8 +14,6 @@ namespace BLE.Client
         {
             base.Load(builder);
             Xamarin.Forms.DependencyService.Register<IAdvertisementDataRepository, AdvertisementDataRepository>();
-            //builder.RegisterType<AdvertisementDataRepository>().As<IAdvertisementDataRepository>();
-            //builder.RegisterInstance<IAdvertisementDataRepository>(new AdvertisementDataRepository()).SingleInstance();
             builder.RegisterType<DeviceListViewModel>().SingleInstance();
         }
     }

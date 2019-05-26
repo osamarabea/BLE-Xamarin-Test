@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using BLE.Client.Models;
-using MvvmCross.Platform;
 using SQLite;
 using Xamarin.Forms;
 
@@ -16,7 +15,6 @@ namespace BLE.Client.Helpers
         public DatabaseHelper()
         {
             sqliteconnection = DependencyService.Get<ISQLite>().GetConnection();
-            //sqliteconnection = Mvx.Resolve<ISQLite>().GetConnection();
             sqliteconnection = DependencyService.Get<ISQLite>().GetConnection();
             sqliteconnection.CreateTable<AdvertisementData>();
         }

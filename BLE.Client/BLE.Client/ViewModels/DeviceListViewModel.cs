@@ -16,6 +16,7 @@ using Plugin.BLE.Abstractions;
 using Plugin.BLE.Abstractions.Contracts;
 using Plugin.BLE.Abstractions.EventArgs;
 using Plugin.BLE.Abstractions.Extensions;
+using Plugin.Clipboard;
 using Plugin.Messaging;
 using Plugin.Permissions.Abstractions;
 using Plugin.Settings.Abstractions;
@@ -34,23 +35,9 @@ namespace BLE.Client.ViewModels
         private Guid _previousGuid;
         private CancellationTokenSource _cancellationTokenSource;
 
-        public Guid PreviousGuid
-        {
-            get { return _previousGuid; }
-            set
-            {
-                _previousGuid = value;
-                _settings.AddOrUpdateValue("lastguid", _previousGuid.ToString());
-                RaisePropertyChanged();
-                RaisePropertyChanged(() => ConnectToPreviousCommand);
-            }
-        }
-
         public MvxCommand RefreshCommand => new MvxCommand(() => TryStartScanning(true));
         public MvxCommand SendEmailCommand => new MvxCommand(() => SendDbEmail());
         public MvxCommand<DeviceListItemViewModel> DisconnectCommand => new MvxCommand<DeviceListItemViewModel>(DisconnectDevice);
-
-        public MvxCommand<DeviceListItemViewModel> ConnectDisposeCommand => new MvxCommand<DeviceListItemViewModel>(ConnectAndDisposeDevice);
 
         public ObservableCollection<DeviceListItemViewModel> Devices { get; set; } = new ObservableCollection<DeviceListItemViewModel>();
         public bool IsRefreshing => Adapter.IsScanning;
@@ -135,15 +122,6 @@ namespace BLE.Client.ViewModels
             _sqliteProvider = DependencyService.Get<ISQLite>();
         }
 
-        private Task GetPreviousGuidAsync()
-        {
-            return Task.Run(() =>
-            {
-                var guidString = _settings.GetValueOrDefault("lastguid", string.Empty);
-                PreviousGuid = !string.IsNullOrEmpty(guidString) ? Guid.Parse(guidString) : Guid.Empty;
-            });
-        }
-
         private void OnDeviceConnectionLost(object sender, DeviceErrorEventArgs e)
         {
             Devices.FirstOrDefault(d => d.Id == e.Device.Id)?.Update();
@@ -226,11 +204,8 @@ namespace BLE.Client.ViewModels
         {
             base.Resume();
 
-            await GetPreviousGuidAsync();
             TryStartScanning();
-
             GetSystemConnectedOrPairedDevices();
-
         }
 
         private void GetSystemConnectedOrPairedDevices()
@@ -436,9 +411,7 @@ namespace BLE.Client.ViewModels
 
                 _userDialogs.ShowSuccess($"Connected to {device.Device.Name}.");
 
-                PreviousGuid = device.Device.Id;
                 return true;
-
             }
             catch (Exception ex)
             {
@@ -451,100 +424,6 @@ namespace BLE.Client.ViewModels
                 _userDialogs.HideLoading();
                 device.Update();
             }
-        }
-
-
-        public MvxCommand ConnectToPreviousCommand => new MvxCommand(ConnectToPreviousDeviceAsync, CanConnectToPrevious);
-
-        private async void ConnectToPreviousDeviceAsync()
-        {
-            IDevice device;
-            try
-            {
-                CancellationTokenSource tokenSource = new CancellationTokenSource();
-
-                var config = new ProgressDialogConfig()
-                {
-                    Title = $"Searching for '{PreviousGuid}'",
-                    CancelText = "Cancel",
-                    IsDeterministic = false,
-                    OnCancel = tokenSource.Cancel
-                };
-
-                using (var progress = _userDialogs.Progress(config))
-                {
-                    progress.Show();
-
-                    device = await Adapter.ConnectToKnownDeviceAsync(PreviousGuid, new ConnectParameters(autoConnect: UseAutoConnect, forceBleTransport: false), tokenSource.Token);
-
-                }
-
-                _userDialogs.ShowSuccess($"Connected to {device.Name}.");
-
-                var deviceItem = Devices.FirstOrDefault(d => d.Device.Id == device.Id);
-                if (deviceItem == null)
-                {
-                    deviceItem = new DeviceListItemViewModel(device);
-                    Devices.Add(deviceItem);
-                }
-                else
-                {
-                    deviceItem.Update(device);
-                }
-            }
-            catch (Exception ex)
-            {
-                _userDialogs.ShowError(ex.Message, 5000);
-                return;
-            }
-        }
-
-        private bool CanConnectToPrevious()
-        {
-            return PreviousGuid != default(Guid);
-        }
-
-        private async void ConnectAndDisposeDevice(DeviceListItemViewModel item)
-        {
-            try
-            {
-                using (item.Device)
-                {
-                    _userDialogs.ShowLoading($"Connecting to {item.Name} ...");
-                    await Adapter.ConnectToDeviceAsync(item.Device);
-
-                    // TODO make this configurable
-                    var resultMTU = await item.Device.RequestMtuAsync(60);
-                    System.Diagnostics.Debug.WriteLine($"Requested MTU. Result is {resultMTU}");
-
-                    // TODO make this configurable
-                    var resultInterval = item.Device.UpdateConnectionInterval(ConnectionInterval.High);
-                    System.Diagnostics.Debug.WriteLine($"Set Connection Interval. Result is {resultInterval}");
-
-                    item.Update();
-                    _userDialogs.ShowSuccess($"Connected {item.Device.Name}");
-
-                    _userDialogs.HideLoading();
-                    for (var i = 5; i >= 1; i--)
-                    {
-                        _userDialogs.ShowLoading($"Disconnect in {i}s...");
-
-                        await Task.Delay(1000);
-
-                        _userDialogs.HideLoading();
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _userDialogs.Alert(ex.Message, "Failed to connect and dispose.");
-            }
-            finally
-            {
-                _userDialogs.HideLoading();
-            }
-
-
         }
 
         private void OnDeviceDisconnected(object sender, DeviceEventArgs e)
@@ -572,7 +451,7 @@ namespace BLE.Client.ViewModels
 
         public MvxCommand<DeviceListItemViewModel> CopyGuidCommand => new MvxCommand<DeviceListItemViewModel>(device =>
         {
-            PreviousGuid = device.Id;
+            CrossClipboard.Current.SetText(device.Id.ToString());
         });
     }
 }

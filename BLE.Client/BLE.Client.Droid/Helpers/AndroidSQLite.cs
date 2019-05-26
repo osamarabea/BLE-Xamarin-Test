@@ -4,7 +4,6 @@ using BLE.Client.Droid.Helpers;
 using BLE.Client.Helpers;
 using SQLite;
 
-//[assembly: Xamarin.Forms.Dependency(typeof(AndroidSQLite))]
 namespace BLE.Client.Droid.Helpers
 {
     public class AndroidSQLite : ISQLite

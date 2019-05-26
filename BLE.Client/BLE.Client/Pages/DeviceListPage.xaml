@@ -60,16 +60,6 @@
                  RowHeight="80"
                  ItemTemplate="{StaticResource DeviceItemTemplate}">
         </ListView>
-
-
-        <!--<Label Grid.Row="2" Text="{Binding PreviousGuid, StringFormat='GUID {0}'}" FontSize="Small" TextColor="Gray" VerticalTextAlignment="End"/>
-        <StackLayout Grid.Row="3" Orientation="Horizontal" HorizontalOptions="Fill">
-            <StackLayout.IsVisible>
-                <OnPlatform x:TypeArguments="x:Boolean" iOS="false" Android="true" />
-            </StackLayout.IsVisible>
-            <Label Text="Use Android AutoConnect" HorizontalOptions="StartAndExpand" VerticalOptions="Center"/>
-            <Switch IsToggled="{Binding UseAutoConnect}" HorizontalOptions="End"></Switch>
-        </StackLayout>-->
                 
         <StackLayout Grid.Row="3" Orientation="Horizontal" HorizontalOptions="Fill">
             <Label Text="Only Show TI Devices" HorizontalOptions="StartAndExpand" VerticalOptions="Center"/>
@@ -77,7 +67,6 @@
         </StackLayout>
                 
         <StackLayout Grid.Row="4" Orientation="Horizontal">
-          <!--<Button Text="Connect to previous" Command="{Binding ConnectToPreviousCommand}" HorizontalOptions="FillAndExpand"/>-->
           <Button Text="Stop Scan" Command="{Binding StopScanCommand}" HorizontalOptions="Start"/>
           <Button Text="Export DB" Command="{Binding SendEmailCommand}" HorizontalOptions="End"/>  
           <ActivityIndicator IsRunning="{Binding IsRefreshing}"
