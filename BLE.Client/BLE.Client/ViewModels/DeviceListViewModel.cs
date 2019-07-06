@@ -244,7 +244,19 @@ namespace BLE.Client.ViewModels
         {
             if (Xamarin.Forms.Device.OS == Xamarin.Forms.TargetPlatform.Android)
             {
-                var status = await _permissions.CheckPermissionStatusAsync(Permission.Location);
+                var status = await _permissions.CheckPermissionStatusAsync(Permission.Storage);
+                if (status != PermissionStatus.Granted)
+                {
+                    var permissionResult = await _permissions.RequestPermissionsAsync(Permission.Storage);
+
+                    if (permissionResult.First().Value != PermissionStatus.Granted)
+                    {
+                        _userDialogs.ShowError("Permission denied. Cannot Save to Local Storage");
+                        return;
+                    }
+                }
+
+                status = await _permissions.CheckPermissionStatusAsync(Permission.Location);
                 if (status != PermissionStatus.Granted)
                 {
                     var permissionResult = await _permissions.RequestPermissionsAsync(Permission.Location);
@@ -430,7 +442,7 @@ namespace BLE.Client.ViewModels
         {
             Devices.FirstOrDefault(d => d.Id == e.Device.Id)?.Update();
             _userDialogs.HideLoading();
-            _userDialogs.Toast($"Disconnected {e.Device.Name}");
+            //_userDialogs.Toast($"Disconnected {e.Device.Name}");
         }
 
         private void SendDbEmail ()

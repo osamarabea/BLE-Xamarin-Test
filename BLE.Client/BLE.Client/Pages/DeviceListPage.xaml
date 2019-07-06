@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <pages:BaseTabbedPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:pages="clr-namespace:BLE.Client.Pages;assembly=BLE.Client"
@@ -40,7 +40,7 @@
       </ResourceDictionary>
   </pages:BaseTabbedPage.Resources>
   <pages:BaseTabbedPage.Children>
-    <pages:BasePage Title="Scan for devices">
+    <pages:BasePage Title="Available Devices">
       <Grid>
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto"></RowDefinition>
@@ -52,19 +52,19 @@
         <StackLayout BackgroundColor="#FF6969" Padding="10" IsVisible="{Binding IsStateOn, Converter={StaticResource InverseBoolean}}">
           <Label Text="{Binding StateText}" FontSize="18" HorizontalTextAlignment="Center"></Label>
         </StackLayout>
-
+        
         <ListView Grid.Row="1" ItemsSource="{Binding Devices}" SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
                  IsPullToRefreshEnabled="True"
                  RefreshCommand="{Binding RefreshCommand}"
-                 IsRefreshing="{Binding IsRefreshing, Mode=OneWay}"
                  RowHeight="80"
                  ItemTemplate="{StaticResource DeviceItemTemplate}">
+        <!--IsRefreshing="{Binding IsRefreshing, Mode=OneWay}"-->
         </ListView>
                 
-        <StackLayout Grid.Row="3" Orientation="Horizontal" HorizontalOptions="Fill">
+        <!--<StackLayout Grid.Row="3" Orientation="Horizontal" HorizontalOptions="Fill">
             <Label Text="Only Show TI Devices" HorizontalOptions="StartAndExpand" VerticalOptions="Center"/>
             <Switch IsToggled="{Binding OnlyShowTi}" HorizontalOptions="End"></Switch>
-        </StackLayout>
+        </StackLayout>-->
                 
         <StackLayout Grid.Row="4" Orientation="Horizontal">
           <Button Text="Stop Scan" Command="{Binding StopScanCommand}" HorizontalOptions="Start"/>
@@ -78,7 +78,7 @@
 
       </Grid>
     </pages:BasePage>
-    <pages:BasePage Title="About">
+    <pages:BasePage Title="Paired Devices">
        <ListView ItemsSource="{Binding SystemDevices}" SelectedItem="{Binding SelectedDevice, Mode=TwoWay}"
                  RowHeight="80"
                  ItemTemplate="{StaticResource DeviceItemTemplate}"/>

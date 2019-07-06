@@ -12,7 +12,7 @@ namespace BLE.Client.ViewModels
         public Guid Id => Device.Id;
         public bool IsConnected => Device.State == DeviceState.Connected;
         public int Rssi => Device.Rssi;
-        public string Name => Device.Name;
+        public string Name => Device.Name ?? "No Name Found";
 
         public DeviceListItemViewModel(IDevice device)
         {

@@ -8,7 +8,7 @@ namespace BLE.Client.Extensions
     {
         public static IDisposable ErrorToast(this IUserDialogs dialogs, string title, string message, TimeSpan duration)
         {
-            return dialogs.Toast(new ToastConfig(message) { BackgroundColor = Color.Red, Duration = duration });
+            return null;// dialogs.Toast(new ToastConfig(message) { BackgroundColor = Color.Red, Duration = duration });
         }
     }
 }

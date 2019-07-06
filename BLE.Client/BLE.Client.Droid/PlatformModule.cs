@@ -18,6 +18,13 @@ namespace BLE.Client.Droid
              .AsImplementedInterfaces()
              .SingleInstance();
 
+            Xamarin.Forms.DependencyService.Register<IFileWorker, FileWorker_Android>();
+
+            builder
+             .RegisterType<FileWorker_Android>()
+             .AsImplementedInterfaces()
+             .SingleInstance();
+
             builder.RegisterModule(new CoreModule());
         }
     }

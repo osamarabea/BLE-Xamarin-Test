@@ -1,19 +1,25 @@
 using System;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Acr.UserDialogs;
+using BLE.Client.Helpers;
 using MvvmCross.Core.ViewModels;
+using PCLStorage;
 using Plugin.BLE.Abstractions;
 using Plugin.BLE.Abstractions.Contracts;
 using Plugin.BLE.Abstractions.EventArgs;
 using Plugin.BLE.Abstractions.Extensions;
+using Xamarin.Forms;
 
 namespace BLE.Client.ViewModels
 {
     public class CharacteristicDetailViewModel : BaseViewModel
     {
         private readonly IUserDialogs _userDialogs;
+        private readonly IFileWorker _fileWorker;
         private bool _updatesStarted;
         public ICharacteristic Characteristic { get; private set; }
 
@@ -39,6 +45,7 @@ namespace BLE.Client.ViewModels
         public CharacteristicDetailViewModel(IAdapter adapter, IUserDialogs userDialogs) : base(adapter)
         {
             _userDialogs = userDialogs;
+            _fileWorker = DependencyService.Get<IFileWorker>();
         }
 
         protected override async void InitFromBundle(IMvxBundle parameters)
@@ -70,9 +77,9 @@ namespace BLE.Client.ViewModels
             
         }
 
-        public MvxCommand ReadCommand => new MvxCommand(ReadValueAsync);
+        public MvxCommand ReadCommand => new MvxCommand(() => ReadValueAsync());
 
-        private async void ReadValueAsync()
+        private async Task ReadValueAsync()
         {
             if (Characteristic == null)
                 return;
@@ -100,6 +107,21 @@ namespace BLE.Client.ViewModels
                 _userDialogs.HideLoading();
             }
 
+        }
+
+        public MvxCommand SaveDataCommand => new MvxCommand(SaveDataToFileAsync);
+
+        private async void SaveDataToFileAsync()
+        {
+            /*await ReadValueAsync();
+            String filename = "TiBle";// + DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ".txt";
+            var folder = await FileSystem.Current.LocalStorage.CreateFolderAsync("myFolder", CreationCollisionOption.OpenIfExists);
+            IFile file = await folder.CreateFileAsync(filename, CreationCollisionOption.ReplaceExisting);
+            await file.WriteAllTextAsync("CharacteristicValue");*/
+
+            await ReadValueAsync();
+            String filename = "TiBle" + DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ".txt";
+            await _fileWorker.SaveTextAsync(filename, CharacteristicValue);
         }
 
         public MvxCommand WriteCommand => new MvxCommand(WriteValueAsync);
