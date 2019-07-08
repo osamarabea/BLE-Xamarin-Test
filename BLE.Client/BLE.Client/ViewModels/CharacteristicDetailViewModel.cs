@@ -120,7 +120,7 @@ namespace BLE.Client.ViewModels
             await file.WriteAllTextAsync("CharacteristicValue");*/
 
             await ReadValueAsync();
-            String filename = "TiBle" + DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ".txt";
+            String filename = "TiBle" + DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ".csv";
             await _fileWorker.SaveTextAsync(filename, CharacteristicValue);
         }
 
