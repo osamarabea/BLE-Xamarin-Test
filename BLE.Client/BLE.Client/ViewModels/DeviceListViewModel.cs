@@ -362,6 +362,56 @@ namespace BLE.Client.ViewModels
             }
             else
             {
+                config.Add("Send RTC Info", async () =>
+                {
+                    if (await ConnectDeviceAsync(device, false))
+                    {
+                        using (_userDialogs.Loading("Writing Data"))
+                        {
+                            try
+                            {
+                                if (device.Device == null)
+                                {
+                                    _userDialogs.Alert("Failed to connect");
+                                    return;
+                                }
+
+                                var servicesFound = await device.Device.GetServicesAsync();
+                                var desiredService = servicesFound.LastOrDefault(x => x.Id.ToString().Contains("113"));
+                                if (servicesFound == null || servicesFound.Count == 0 || desiredService == null)
+                                {
+                                    _userDialogs.Alert("Failed to find services");
+                                    return;
+                                }
+
+                                var characteristicsFound = await desiredService.GetCharacteristicsAsync();
+                                var desiredCharacteristic = characteristicsFound.LastOrDefault(x => x.Id.ToString().Contains("1132"));
+                                if (characteristicsFound == null || characteristicsFound.Count == 0 || desiredCharacteristic == null || !desiredCharacteristic.CanWrite)
+                                {
+                                    _userDialogs.Alert("Failed to find characteristics");
+                                    return;
+                                }
+
+                                var data = GetBytesFromSeconds(GetSecondsSinceUnixEpoch(DateTime.Now.Year, DateTime.Now.Month,
+                                    DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute));
+                                var isWritten = await desiredCharacteristic.WriteAsync(data);
+                                if (!isWritten)
+                                {
+                                    _userDialogs.Alert("Failed to write data");
+                                    return;
+                                }
+
+                                await Adapter.DisconnectDeviceAsync(device.Device);
+                                _userDialogs.Alert("RTC Info Sent");
+                            }
+                            catch(Exception e)
+                            {
+                                _userDialogs.Alert("Failed to set RTC info");
+                            }
+                        }
+                    }
+                });
+
                 config.Add("Connect", async () =>
                 {
                     if (await ConnectDeviceAsync(device))
@@ -459,6 +509,25 @@ namespace BLE.Client.ViewModels
 
                 emailMessenger.SendEmail(email);
             }
+        }
+
+        private static byte[] GetBytesFromSeconds(long seconds)
+        {
+            byte[] b = new byte[] { 10, 12, 12, 12 };
+            var bytesResult = BitConverter.GetBytes(seconds);
+            Array.Copy(bytesResult, 0, b, 0, 4);
+            return b;
+        }
+
+        private readonly DateTime UnixEpoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        private long GetSecondsSinceUnixEpoch(int year, int month, int day,
+                                                  int hour, int minute)
+        {
+            DateTime local = new DateTime(year, month, day, hour, minute, 0,
+                                          DateTimeKind.Local);
+            DateTime utc = local.ToUniversalTime();
+            return (long)(utc - UnixEpoch).TotalSeconds;
         }
 
         public MvxCommand<DeviceListItemViewModel> CopyGuidCommand => new MvxCommand<DeviceListItemViewModel>(device =>
