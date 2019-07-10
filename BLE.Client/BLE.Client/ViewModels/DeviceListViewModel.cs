@@ -120,6 +120,8 @@ namespace BLE.Client.ViewModels
             //Adapter.DeviceConnected += (sender, e) => Adapter.DisconnectDeviceAsync(e.Device);
             _advertisementDataRepository = DependencyService.Get<IAdvertisementDataRepository>();
             _sqliteProvider = DependencyService.Get<ISQLite>();
+
+            RequestPermissions();
         }
 
         private void OnDeviceConnectionLost(object sender, DeviceErrorEventArgs e)
@@ -242,21 +244,18 @@ namespace BLE.Client.ViewModels
 
         private async void TryStartScanning(bool refresh = false)
         {
+            var arePermissionsGranted = await CheckIfPermissionsGranted();
+            if (arePermissionsGranted && IsStateOn && (refresh || !Devices.Any()) && !IsRefreshing)
+            {
+                ScanForDevices();
+            }
+        }
+
+        private async void RequestPermissions()
+        {
             if (Xamarin.Forms.Device.OS == Xamarin.Forms.TargetPlatform.Android)
             {
-                var status = await _permissions.CheckPermissionStatusAsync(Permission.Storage);
-                if (status != PermissionStatus.Granted)
-                {
-                    var permissionResult = await _permissions.RequestPermissionsAsync(Permission.Storage);
-
-                    if (permissionResult.First().Value != PermissionStatus.Granted)
-                    {
-                        _userDialogs.ShowError("Permission denied. Cannot Save to Local Storage");
-                        return;
-                    }
-                }
-
-                status = await _permissions.CheckPermissionStatusAsync(Permission.Location);
+                var status = await _permissions.CheckPermissionStatusAsync(Permission.Location);
                 if (status != PermissionStatus.Granted)
                 {
                     var permissionResult = await _permissions.RequestPermissionsAsync(Permission.Location);
@@ -267,12 +266,37 @@ namespace BLE.Client.ViewModels
                         return;
                     }
                 }
+
+                status = await _permissions.CheckPermissionStatusAsync(Permission.Storage);
+                if (status != PermissionStatus.Granted)
+                {
+                    var permissionResult = await _permissions.RequestPermissionsAsync(Permission.Storage);
+
+                    if (permissionResult.First().Value != PermissionStatus.Granted)
+                    {
+                        _userDialogs.ShowError("Permission denied. Cannot Save to Local Storage");
+                        return;
+                    }
+                }
+            }
+        }
+
+        private async Task<bool> CheckIfPermissionsGranted()
+        {
+            if (Xamarin.Forms.Device.OS == Xamarin.Forms.TargetPlatform.Android)
+            {
+                /*var status = await _permissions.CheckPermissionStatusAsync(Permission.Storage);
+                if (status != PermissionStatus.Granted)
+                    return false;*/
+
+                var status = await _permissions.CheckPermissionStatusAsync(Permission.Location);
+                if (status != PermissionStatus.Granted)
+                    return false;
+
+                return true;
             }
 
-            if (IsStateOn && (refresh || !Devices.Any()) && !IsRefreshing)
-            {
-                ScanForDevices();
-            }
+            return true;
         }
 
         private async void ScanForDevices()
