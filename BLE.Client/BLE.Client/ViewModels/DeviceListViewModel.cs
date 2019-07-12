@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Acr.UserDialogs;
@@ -32,6 +33,7 @@ namespace BLE.Client.ViewModels
         private readonly IPermissions _permissions;
         private readonly IAdvertisementDataRepository _advertisementDataRepository;
         private readonly ISQLite _sqliteProvider;
+        private readonly IFileWorker _fileWorker;
         private Guid _previousGuid;
         private CancellationTokenSource _cancellationTokenSource;
 
@@ -120,6 +122,7 @@ namespace BLE.Client.ViewModels
             //Adapter.DeviceConnected += (sender, e) => Adapter.DisconnectDeviceAsync(e.Device);
             _advertisementDataRepository = DependencyService.Get<IAdvertisementDataRepository>();
             _sqliteProvider = DependencyService.Get<ISQLite>();
+            _fileWorker = DependencyService.Get<IFileWorker>();
 
             RequestPermissions();
         }
@@ -386,6 +389,75 @@ namespace BLE.Client.ViewModels
             }
             else
             {
+                config.Add("Download Data", async () =>
+                {
+                    if (await ConnectDeviceAsync(device, false))
+                    {
+                        using (_userDialogs.Loading("Reading Data"))
+                        {
+                            try
+                            {
+                                if (device.Device == null)
+                                {
+                                    _userDialogs.Alert("Failed to connect");
+                                    return;
+                                }
+
+                                var servicesFound = await device.Device.GetServicesAsync();
+                                var desiredService = servicesFound.LastOrDefault(x => x.Id.ToString().Contains("113"));
+                                if (servicesFound == null || servicesFound.Count == 0 || desiredService == null)
+                                {
+                                    _userDialogs.Alert("Failed to find services");
+                                    return;
+                                }
+
+                                var characteristicsFound = await desiredService.GetCharacteristicsAsync();
+                                var desiredCharacteristic = characteristicsFound.LastOrDefault(x => x.Id.ToString().Contains("1132"));
+                                if (characteristicsFound == null || characteristicsFound.Count == 0 || desiredCharacteristic == null || !desiredCharacteristic.CanWrite)
+                                {
+                                    _userDialogs.Alert("Failed to find characteristics");
+                                    return;
+                                }
+
+                                var data = GetBytesFromString("11");
+                                var isWritten = await desiredCharacteristic.WriteAsync(data);
+                                if (!isWritten)
+                                {
+                                    _userDialogs.Alert("Failed to read data");
+                                    return;
+                                }
+                                var readingResult = await desiredCharacteristic.ReadAsync();
+                                
+                                var totalDownloadedBytes = new List<byte>();
+                                totalDownloadedBytes.AddRange(readingResult);
+                                do
+                                {
+                                    data = GetBytesFromString("12");
+                                    isWritten = await desiredCharacteristic.WriteAsync(data);
+                                    if (!isWritten)
+                                    {
+                                        _userDialogs.Alert("Failed to read data");
+                                        return;
+                                    }
+                                    readingResult = await desiredCharacteristic.ReadAsync();
+                                    totalDownloadedBytes.AddRange(readingResult);
+                                } while (readingResult.Count() > 1);
+
+                                String filename = "TiBle" + DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ".csv";
+                                var dataInStringFormat = totalDownloadedBytes.ToArray().ToHexString(); //Encoding.UTF8.GetString(totalDownloadedBytes.ToArray(), 0, totalDownloadedBytes.ToArray().Count());
+                                await _fileWorker.SaveTextAsync(filename, dataInStringFormat);
+
+                                await Adapter.DisconnectDeviceAsync(device.Device);
+                                _userDialogs.Alert("Data downloaded and saved to your storage");
+                            }
+                            catch (Exception e)
+                            {
+                                _userDialogs.Alert("Failed to set RTC info");
+                            }
+                        }
+                    }
+                });
+
                 config.Add("Send RTC Info", async () =>
                 {
                     if (await ConnectDeviceAsync(device, false))
@@ -428,7 +500,7 @@ namespace BLE.Client.ViewModels
                                 await Adapter.DisconnectDeviceAsync(device.Device);
                                 _userDialogs.Alert("RTC Info Sent");
                             }
-                            catch(Exception e)
+                            catch (Exception e)
                             {
                                 _userDialogs.Alert("Failed to set RTC info");
                             }
@@ -436,7 +508,7 @@ namespace BLE.Client.ViewModels
                     }
                 });
 
-                config.Add("Connect", async () =>
+                /*config.Add("Connect", async () =>
                 {
                     if (await ConnectDeviceAsync(device))
                     {
@@ -461,7 +533,7 @@ namespace BLE.Client.ViewModels
                         Data = device.Device.AdvertisementRecords[0].Data
                     };
                     _advertisementDataRepository.InsertDevice(advModel);
-                });
+                });*/
             }
 
             config.Add("Copy ID", () => CopyGuidCommand.Execute(device));
@@ -533,6 +605,11 @@ namespace BLE.Client.ViewModels
 
                 emailMessenger.SendEmail(email);
             }
+        }
+
+        private static byte[] GetBytesFromString(string text)
+        {
+            return text.Split(' ').Where(token => !string.IsNullOrEmpty(token)).Select(token => Convert.ToByte(token, 16)).ToArray();
         }
 
         private static byte[] GetBytesFromSeconds(long seconds)
