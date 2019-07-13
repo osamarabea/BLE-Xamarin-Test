@@ -11,5 +11,6 @@ namespace BLE.Client.Helpers
         Task<IEnumerable<string>> GetFilesAsync();
         Task<string> LoadTextAsync(string filename);
         Task SaveTextAsync(string filename, string text);
+        void SaveBytes(string filename, byte[] bytesToWrite);
     }
 }

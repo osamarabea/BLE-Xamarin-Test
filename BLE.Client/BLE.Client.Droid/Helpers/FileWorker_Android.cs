@@ -48,6 +48,22 @@ namespace BLE.Client.Droid.Helpers
             }
         }
 
+        public void SaveBytes(string filename, byte[] bytesToWrite)
+        {
+            if (filename != null && filename.Length > 0 && bytesToWrite != null)
+            {
+                string filepath = GetFilePath(filename);
+                if (!Directory.Exists(Path.GetDirectoryName(filepath)))
+                    Directory.CreateDirectory(Path.GetDirectoryName(filepath));
+
+                FileStream file = File.Create(filepath);
+
+                file.Write(bytesToWrite, 0, bytesToWrite.Length);
+
+                file.Close();
+            }
+        }
+
         string GetFilePath(string filename)
         {
             return Path.Combine(GetDocsPath(), filename);

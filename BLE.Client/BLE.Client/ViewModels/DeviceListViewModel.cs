@@ -429,7 +429,7 @@ namespace BLE.Client.ViewModels
                                 var readingResult = await desiredCharacteristic.ReadAsync();
                                 
                                 var totalDownloadedBytes = new List<byte>();
-                                totalDownloadedBytes.AddRange(readingResult);
+                                totalDownloadedBytes.AddRange(readingResult.Skip(1));//skip sequence byte
                                 do
                                 {
                                     data = GetBytesFromString("12");
@@ -440,12 +440,11 @@ namespace BLE.Client.ViewModels
                                         return;
                                     }
                                     readingResult = await desiredCharacteristic.ReadAsync();
-                                    totalDownloadedBytes.AddRange(readingResult);
+                                    totalDownloadedBytes.AddRange(readingResult.Skip(1));//skip sequence byte
                                 } while (readingResult.Count() > 1);
 
-                                String filename = "TiBle" + DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ".csv";
-                                var dataInStringFormat = totalDownloadedBytes.ToArray().ToHexString(); //Encoding.UTF8.GetString(totalDownloadedBytes.ToArray(), 0, totalDownloadedBytes.ToArray().Count());
-                                await _fileWorker.SaveTextAsync(filename, dataInStringFormat);
+                                String filename = "TiBle" + DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ".bin";
+                                _fileWorker.SaveBytes(filename, totalDownloadedBytes.ToArray());
 
                                 await Adapter.DisconnectDeviceAsync(device.Device);
                                 _userDialogs.Alert("Data downloaded and saved to your storage");
