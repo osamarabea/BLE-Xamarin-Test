@@ -26,8 +26,8 @@
                       <Setter Property="BackgroundColor" Value="#1A00FF00"></Setter>
                     </DataTrigger>
                   </Grid.Triggers>
-                  <StackLayout Orientation="Vertical" VerticalOptions="Center">
-                    <Label Text="{Binding Name}" FontSize="Large" />
+                  <StackLayout Orientation="Vertical" Padding="10,-4,0,0" VerticalOptions="Center">
+                    <Label Text="{Binding Name}" FontSize="Medium" />
                     <Label Text="{Binding Id, StringFormat='{0}'}" TextColor="Gray" FontSize="Small"/>
                   </StackLayout>
                   <Label Grid.Column="1"
@@ -57,8 +57,8 @@
                  IsPullToRefreshEnabled="True"
                  RefreshCommand="{Binding RefreshCommand}"
                  RowHeight="80"
+                 IsRefreshing="{Binding IsRefreshing, Mode=OneWay}"
                  ItemTemplate="{StaticResource DeviceItemTemplate}">
-        <!--IsRefreshing="{Binding IsRefreshing, Mode=OneWay}"-->
         </ListView>
                 
         <!--<StackLayout Grid.Row="3" Orientation="Horizontal" HorizontalOptions="Fill">

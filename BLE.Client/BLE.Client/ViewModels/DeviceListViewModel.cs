@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -254,7 +254,7 @@ namespace BLE.Client.ViewModels
             }
         }
 
-        private async void RequestPermissions()
+        private async Task RequestPermissions()
         {
             if (Xamarin.Forms.Device.OS == Xamarin.Forms.TargetPlatform.Android)
             {
@@ -391,6 +391,7 @@ namespace BLE.Client.ViewModels
             {
                 config.Add("Download Data", async () =>
                 {
+                    await RequestPermissions();
                     if (await ConnectDeviceAsync(device, false))
                     {
                         using (_userDialogs.Loading("Reading Data"))
