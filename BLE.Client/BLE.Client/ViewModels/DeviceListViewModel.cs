@@ -420,7 +420,7 @@ namespace BLE.Client.ViewModels
                                     return;
                                 }
 
-                                var mtuValue = await device.Device.RequestMtuAsync(218);
+                                var mtuValue = await device.Device.RequestMtuAsync(247);
 
                                 var servicesFound = await device.Device.GetServicesAsync();
                                 var desiredService = servicesFound.LastOrDefault(x => x.Id.ToString().Contains("113"));
@@ -468,7 +468,7 @@ namespace BLE.Client.ViewModels
                                     totalDownloadedBytes.AddRange(readingResult.Skip(1));//skip sequence byte
                                 } while (readingResult.Count() > 1);
 
-                                String filename = "TiBle" + DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ".bin";
+                                String filename = "X-lab" + DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss") + ".csv";
                                 _fileWorker.SaveBytes(filename, totalDownloadedBytes.ToArray());
 
                                 await Adapter.DisconnectDeviceAsync(device.Device);
@@ -565,7 +565,7 @@ namespace BLE.Client.ViewModels
                 });*/
             }
 
-            config.Add("Copy ID", () => CopyGuidCommand.Execute(device));
+            //config.Add("Copy ID", () => CopyGuidCommand.Execute(device));
             config.Cancel = new ActionSheetOption("Cancel");
             config.SetTitle("Device Options");
             _userDialogs.ActionSheet(config);
