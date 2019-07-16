@@ -73,7 +73,8 @@ namespace BLE.Client.Droid.Helpers
         string GetDocsPath()
         {
             //return Environment.GetFolderPath(Android.OS.Environment.ExternalStorageDirectory.AbsolutePath);
-            return Android.OS.Environment.ExternalStorageDirectory.AbsolutePath;
+            //return Android.OS.Environment.ExternalStorageDirectory.AbsolutePath;
+            return Android.OS.Environment.ExternalStorageDirectory.AbsolutePath + "/Android/data/com.ble.ticlient/files";
         }
     }
 }

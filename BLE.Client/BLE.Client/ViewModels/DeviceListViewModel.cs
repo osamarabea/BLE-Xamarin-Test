@@ -404,6 +404,8 @@ namespace BLE.Client.ViewModels
                                     return;
                                 }
 
+                                var mtuValue = await device.Device.RequestMtuAsync(218);
+
                                 var servicesFound = await device.Device.GetServicesAsync();
                                 var desiredService = servicesFound.LastOrDefault(x => x.Id.ToString().Contains("113"));
                                 if (servicesFound == null || servicesFound.Count == 0 || desiredService == null)
@@ -448,11 +450,11 @@ namespace BLE.Client.ViewModels
                                 _fileWorker.SaveBytes(filename, totalDownloadedBytes.ToArray());
 
                                 await Adapter.DisconnectDeviceAsync(device.Device);
-                                _userDialogs.Alert("Data downloaded and saved to your storage");
+                                _userDialogs.Alert("Data downloaded and saved to /Android/data/com.ble.ticlient/files");
                             }
                             catch (Exception e)
                             {
-                                _userDialogs.Alert("Failed to set RTC info");
+                                _userDialogs.Alert("Failed to download data");
                             }
                         }
                     }
@@ -490,7 +492,9 @@ namespace BLE.Client.ViewModels
 
                                 var data = GetBytesFromSeconds(GetSecondsSinceUnixEpoch(DateTime.Now.Year, DateTime.Now.Month,
                                     DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute));
-                                var isWritten = await desiredCharacteristic.WriteAsync(data);
+                                var isWritten = await desiredCharacteristic.WriteAsync(GetBytesFromString("13"));
+                                if (isWritten)
+                                    isWritten = await desiredCharacteristic.WriteAsync(data);
                                 if (!isWritten)
                                 {
                                     _userDialogs.Alert("Failed to write data");
