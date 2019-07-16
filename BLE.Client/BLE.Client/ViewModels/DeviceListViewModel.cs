@@ -21,6 +21,7 @@ using Plugin.Clipboard;
 using Plugin.Messaging;
 using Plugin.Permissions.Abstractions;
 using Plugin.Settings.Abstractions;
+using Xamarin.Essentials;
 using Xamarin.Forms;
 
 namespace BLE.Client.ViewModels
@@ -45,6 +46,7 @@ namespace BLE.Client.ViewModels
         public bool IsRefreshing => Adapter.IsScanning;
         public bool IsStateOn => _bluetoothLe.IsOn;
         public string StateText => GetStateText();
+        public string VersionNumber { get; private set; }
         public DeviceListItemViewModel SelectedDevice
         {
             get { return null; }
@@ -123,6 +125,8 @@ namespace BLE.Client.ViewModels
             _advertisementDataRepository = DependencyService.Get<IAdvertisementDataRepository>();
             _sqliteProvider = DependencyService.Get<ISQLite>();
             _fileWorker = DependencyService.Get<IFileWorker>();
+
+            VersionNumber = "Version: " + VersionTracking.CurrentVersion;
 
             RequestPermissions();
         }
@@ -394,7 +398,19 @@ namespace BLE.Client.ViewModels
                     await RequestPermissions();
                     if (await ConnectDeviceAsync(device, false))
                     {
-                        using (_userDialogs.Loading("Reading Data"))
+                        bool isCancelPressed = false;
+                        var progressDialogConfig = new ProgressDialogConfig()
+                        {
+                            Title = $"Reading Data",
+                            CancelText = "Cancel",
+                            IsDeterministic = false,
+                            OnCancel = new Action(delegate ()
+                            {
+                                isCancelPressed = true;
+                            })
+                        };
+
+                        using (_userDialogs.Progress(progressDialogConfig))
                         {
                             try
                             {
@@ -430,11 +446,17 @@ namespace BLE.Client.ViewModels
                                     return;
                                 }
                                 var readingResult = await desiredCharacteristic.ReadAsync();
-                                
+
                                 var totalDownloadedBytes = new List<byte>();
                                 totalDownloadedBytes.AddRange(readingResult.Skip(1));//skip sequence byte
                                 do
                                 {
+                                    if (isCancelPressed)
+                                    {
+                                        await Adapter.DisconnectDeviceAsync(device.Device);
+                                        return;
+                                    }
+
                                     data = GetBytesFromString("12");
                                     isWritten = await desiredCharacteristic.WriteAsync(data);
                                     if (!isWritten)
@@ -450,7 +472,7 @@ namespace BLE.Client.ViewModels
                                 _fileWorker.SaveBytes(filename, totalDownloadedBytes.ToArray());
 
                                 await Adapter.DisconnectDeviceAsync(device.Device);
-                                _userDialogs.Alert("Data downloaded and saved to /Android/data/com.ble.ticlient/files");
+                                _userDialogs.Alert("Data downloaded and saved to /Android/data/XLab");
                             }
                             catch (Exception e)
                             {
@@ -490,11 +512,14 @@ namespace BLE.Client.ViewModels
                                     return;
                                 }
 
-                                var data = GetBytesFromSeconds(GetSecondsSinceUnixEpoch(DateTime.Now.Year, DateTime.Now.Month,
+                                var rtcCommandData = GetBytesFromString("13");
+                                var epochData = GetBytesFromSeconds(GetSecondsSinceUnixEpoch(DateTime.Now.Year, DateTime.Now.Month,
                                     DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute));
-                                var isWritten = await desiredCharacteristic.WriteAsync(GetBytesFromString("13"));
-                                if (isWritten)
-                                    isWritten = await desiredCharacteristic.WriteAsync(data);
+                                var combinedDataArray = new byte[rtcCommandData.Length + epochData.Length];
+                                Buffer.BlockCopy(rtcCommandData, 0, combinedDataArray, 0, rtcCommandData.Length);
+                                Buffer.BlockCopy(epochData, 0, combinedDataArray, rtcCommandData.Length, epochData.Length);
+
+                                var isWritten = await desiredCharacteristic.WriteAsync(combinedDataArray);
                                 if (!isWritten)
                                 {
                                     _userDialogs.Alert("Failed to write data");

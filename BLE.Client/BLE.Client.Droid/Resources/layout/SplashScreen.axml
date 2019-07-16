@@ -1,11 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
+    android:background="@android:color/white"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
     <ImageView
         android:layout_width="wrap_content"
-        android:src="@drawable/icon"
+        android:src="@drawable/xLab_logo_png"
         android:layout_height="wrap_content"
         android:scaleType="center"
         android:layout_centerInParent="true" />

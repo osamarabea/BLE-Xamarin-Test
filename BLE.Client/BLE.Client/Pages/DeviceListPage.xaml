@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:pages="clr-namespace:BLE.Client.Pages;assembly=BLE.Client"
              x:Class="BLE.Client.Pages.DeviceListPage"
-             Title="Bluetooth 5 Test"
+             Title="X-Lab EQ Room"
              x:Name="DevicePage">
   <pages:BaseTabbedPage.Resources>
     <ResourceDictionary>
@@ -60,7 +60,10 @@
                  IsRefreshing="{Binding IsRefreshing, Mode=OneWay}"
                  ItemTemplate="{StaticResource DeviceItemTemplate}">
         </ListView>
-                
+            
+        <StackLayout Grid.Row="3" Orientation="Horizontal" Padding="10,0,0,0" HorizontalOptions="Fill">
+            <Label Text="{Binding VersionNumber}" HorizontalOptions="StartAndExpand" VerticalOptions="Center"/>
+        </StackLayout>        
         <!--<StackLayout Grid.Row="3" Orientation="Horizontal" HorizontalOptions="Fill">
             <Label Text="Only Show TI Devices" HorizontalOptions="StartAndExpand" VerticalOptions="Center"/>
             <Switch IsToggled="{Binding OnlyShowTi}" HorizontalOptions="End"></Switch>

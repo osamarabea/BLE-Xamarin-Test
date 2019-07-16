@@ -2,6 +2,7 @@ using Acr.UserDialogs;
 using Android.App;
 using Android.Content.PM;
 using Android.OS;
+using Android.Views;
 using MvvmCross.Core.ViewModels;
 using MvvmCross.Core.Views;
 using MvvmCross.Forms.Droid.Presenters;
@@ -26,6 +27,7 @@ namespace BLE.Client.Droid
             Forms.Init(this, bundle);
             var formsApp = new BleMvxFormsApp();
             LoadApplication(formsApp);
+            this.Window.SetFlags(WindowManagerFlags.KeepScreenOn, WindowManagerFlags.KeepScreenOn);
 
             var presenter = (MvxFormsDroidPagePresenter) Mvx.Resolve<IMvxViewPresenter>();
             presenter.FormsApplication = formsApp;

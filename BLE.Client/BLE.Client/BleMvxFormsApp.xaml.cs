@@ -1,5 +1,6 @@
 ﻿using MvvmCross.Forms.Core;
 using MvvmCross.Platform;
+using Xamarin.Essentials;
 
 namespace BLE.Client
 {
@@ -14,6 +15,7 @@ namespace BLE.Client
         {
             base.OnStart();
             Mvx.Trace("App Start");
+            VersionTracking.Track();
         }
 
         protected override void OnResume()
