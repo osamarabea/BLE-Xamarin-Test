@@ -414,6 +414,8 @@ namespace BLE.Client.ViewModels
                         {
                             try
                             {
+                                StopScanCommand.Execute(null);
+
                                 if (device.Device == null)
                                 {
                                     _userDialogs.Alert("Failed to connect");
@@ -490,6 +492,8 @@ namespace BLE.Client.ViewModels
                         {
                             try
                             {
+                                StopScanCommand.Execute(null);
+
                                 if (device.Device == null)
                                 {
                                     _userDialogs.Alert("Failed to connect");
@@ -593,7 +597,8 @@ namespace BLE.Client.ViewModels
                 {
                     progress.Show();
 
-                    await Adapter.ConnectToDeviceAsync(device.Device, new ConnectParameters(autoConnect: UseAutoConnect, forceBleTransport: false), tokenSource.Token);
+                    //switch forceBleTransport to false for non ble connections
+                    await Adapter.ConnectToDeviceAsync(device.Device, new ConnectParameters(autoConnect: UseAutoConnect, forceBleTransport: true), tokenSource.Token); 
                 }
 
                 _userDialogs.ShowSuccess($"Connected to {device.Device.Name}.");
