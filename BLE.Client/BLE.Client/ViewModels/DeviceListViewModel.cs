@@ -607,22 +607,34 @@ namespace BLE.Client.ViewModels
             {
                 if (ex.Message.Contains("133")) //retry once
                 {
-                    try
+                    using (var progress = _userDialogs.Progress(config))
                     {
-                        using (var progress = _userDialogs.Progress(config))
-                        {
-                            progress.Show();
+                        progress.Show();
+                        await Task.Delay(500);
+                        var reconnectionSucceeded = false;
+                        int reconnectionCounter = 0;
 
-                            await Task.Delay(500);
-                            //switch forceBleTransport to false for non ble connections
-                            await Adapter.ConnectToDeviceAsync(device.Device, new ConnectParameters(autoConnect: UseAutoConnect, forceBleTransport: true), tokenSource.Token);
+                        do
+                        {
+                            try
+                            {
+                                //switch forceBleTransport to false for non ble connections
+                                await Adapter.ConnectToDeviceAsync(device.Device, new ConnectParameters(autoConnect: UseAutoConnect, forceBleTransport: true), tokenSource.Token);
+                                reconnectionSucceeded = true;
+                            }
+                            catch(Exception e)
+                            {
+                                if (tokenSource.IsCancellationRequested)
+                                    break;
+                                reconnectionCounter ++;
+                            }
+                        } while (!reconnectionSucceeded && reconnectionCounter <= 4);
+
+                        if(reconnectionSucceeded)
+                        {
+                            _userDialogs.ShowSuccess($"Connected to {device.Device.Name}.");
+                            return true;
                         }
-                        _userDialogs.ShowSuccess($"Connected to {device.Device.Name}.");
-                        return true;
-                    }
-                    catch (Exception e)
-                    {
-                        //keep going to show failure message
                     }
                 }
 
