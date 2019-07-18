@@ -577,38 +577,57 @@ namespace BLE.Client.ViewModels
 
         private async Task<bool> ConnectDeviceAsync(DeviceListItemViewModel device, bool showPrompt = true)
         {
+            CancellationTokenSource tokenSource = new CancellationTokenSource();
+            var config = new ProgressDialogConfig()
+            {
+                Title = $"Connecting to '{device.Id}'",
+                CancelText = "Cancel",
+                IsDeterministic = false,
+                OnCancel = tokenSource.Cancel
+            };
+
             if (showPrompt && !await _userDialogs.ConfirmAsync($"Connect to device '{device.Name}'?"))
             {
                 return false;
             }
             try
             {
-                CancellationTokenSource tokenSource = new CancellationTokenSource();
-
-                var config = new ProgressDialogConfig()
-                {
-                    Title = $"Connecting to '{device.Id}'",
-                    CancelText = "Cancel",
-                    IsDeterministic = false,
-                    OnCancel = tokenSource.Cancel
-                };
-
                 using (var progress = _userDialogs.Progress(config))
                 {
                     progress.Show();
-
+                    
                     //switch forceBleTransport to false for non ble connections
                     await Adapter.ConnectToDeviceAsync(device.Device, new ConnectParameters(autoConnect: UseAutoConnect, forceBleTransport: true), tokenSource.Token); 
                 }
 
                 _userDialogs.ShowSuccess($"Connected to {device.Device.Name}.");
-
                 return true;
             }
             catch (Exception ex)
             {
-                _userDialogs.Alert(ex.Message, "Connection error");
+                if (ex.Message.Contains("133")) //retry once
+                {
+                    try
+                    {
+                        using (var progress = _userDialogs.Progress(config))
+                        {
+                            progress.Show();
+
+                            await Task.Delay(500);
+                            //switch forceBleTransport to false for non ble connections
+                            await Adapter.ConnectToDeviceAsync(device.Device, new ConnectParameters(autoConnect: UseAutoConnect, forceBleTransport: true), tokenSource.Token);
+                        }
+                        _userDialogs.ShowSuccess($"Connected to {device.Device.Name}.");
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        //keep going to show failure message
+                    }
+                }
+
                 Mvx.Trace(ex.Message);
+                _userDialogs.Alert(ex.Message, "Connection error");
                 return false;
             }
             finally
