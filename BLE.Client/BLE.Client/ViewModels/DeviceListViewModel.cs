@@ -474,7 +474,7 @@ namespace BLE.Client.ViewModels
                                 _fileWorker.SaveBytes(filename, totalDownloadedBytes.ToArray());
 
                                 await Adapter.DisconnectDeviceAsync(device.Device);
-                                _userDialogs.Alert("Data downloaded and saved to /Android/data/XLab");
+                                _userDialogs.Alert("Data downloaded and saved to /Download/XLab");
                             }
                             catch (Exception e)
                             {

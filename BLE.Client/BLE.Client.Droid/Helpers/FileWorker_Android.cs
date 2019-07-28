@@ -18,7 +18,6 @@ namespace BLE.Client.Droid.Helpers
         public Task<bool> ExistsAsync(string filename)
         {
             string filepath = GetFilePath(filename);
-            // существует ли файл
             bool exists = File.Exists(filepath);
             return Task<bool>.FromResult(exists);
         }
@@ -69,13 +68,14 @@ namespace BLE.Client.Droid.Helpers
             return Path.Combine(GetDocsPath(), filename);
         }
 
-        // Directory MyDocuments
+        // Directory Downloads/Xlab
         string GetDocsPath()
         {
             //return Environment.GetFolderPath(Android.OS.Environment.ExternalStorageDirectory.AbsolutePath);
             //return Android.OS.Environment.ExternalStorageDirectory.AbsolutePath;
             //return Android.OS.Environment.ExternalStorageDirectory.AbsolutePath + "/Android/data/com.ble.ticlient/files";
-            return Android.OS.Environment.ExternalStorageDirectory.AbsolutePath + "/Android/data/XLab";
+            //return Android.OS.Environment.ExternalStorageDirectory.AbsolutePath + "/Android/data/XLab";
+            return Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryDownloads).AbsolutePath + "/XLab";
         }
     }
 }
